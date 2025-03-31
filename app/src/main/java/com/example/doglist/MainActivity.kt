@@ -65,10 +65,16 @@ fun DogListApp(navController: NavHostController) {
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route ?: ""
 
-    // Funkcja do usuwania psa
     val removeDog: (String) -> Unit = { dogName ->
         dogList.removeAll { it.first == dogName }
         favoriteDogs = favoriteDogs - dogName
+    }
+    var isSearching by remember { mutableStateOf(false) }
+
+    val filteredDogs = if (isSearching && searchText.text.isNotBlank()) {
+        dogList.filter { it.first.contains(searchText.text, ignoreCase = true) }
+    } else {
+        dogList
     }
 
     Scaffold(
@@ -111,8 +117,8 @@ fun DogListApp(navController: NavHostController) {
                     if (currentRoute.startsWith("dog_details/")) {
                         val dogName = currentRoute.substringAfter("dog_details/")
                         IconButton(onClick = {
-                            removeDog(dogName)  // Usuwamy psa
-                            navController.popBackStack()  // Wracamy do poprzedniego ekranu
+                            removeDog(dogName)
+                            navController.popBackStack()
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
@@ -157,17 +163,20 @@ fun DogListApp(navController: NavHostController) {
                             onValueChange = {
                                 searchText = it
                                 showError = false
+                                isSearching = false
                             },
                             label = { Text("Poszukaj lub dodaj pieska 🐕") },
                             modifier = Modifier.weight(1f),
                             isError = showError
                         )
 
+
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        IconButton(onClick = { /* TODO: Wyszukiwanie */ }) {
+                        IconButton(onClick = { isSearching = true }) {
                             Icon(Icons.Default.Search, contentDescription = "Szukaj")
                         }
+
 
                         IconButton(onClick = {
                             if (searchText.text.isNotBlank()) {
@@ -176,7 +185,6 @@ fun DogListApp(navController: NavHostController) {
                                 } else {
                                     dogList.add(searchText.text to "Jack Russel")
                                     searchText = TextFieldValue("")
-
                                 }
                             }
                         }) {
@@ -196,11 +204,11 @@ fun DogListApp(navController: NavHostController) {
                     }
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    dogList.sortedByDescending { it.first in favoriteDogs }.forEach { (name, breed) ->
+                    filteredDogs.forEach { (name, breed) ->
                         DogItem(
-                            name,
-                            breed,
-                            favoriteDogs.contains(name),
+                            name = name,
+                            breed = breed,
+                            isFavorite = favoriteDogs.contains(name),
                             onFavoriteToggle = {
                                 favoriteDogs = if (favoriteDogs.contains(name)) {
                                     favoriteDogs - name
@@ -301,7 +309,7 @@ fun ProfileScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(top = 64.dp), // Przesunięcie elementów w górę
+            .padding(top = 64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
@@ -323,7 +331,6 @@ fun DogDetailsScreen(dogName: String, navController: NavHostController, onDelete
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Box with dog's picture and name
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 modifier = Modifier
