@@ -74,7 +74,7 @@ fun DogListApp(navController: NavHostController) {
     val filteredDogs = if (isSearching && searchText.text.isNotBlank()) {
         dogList.filter { it.first.contains(searchText.text, ignoreCase = true) }
     } else {
-        dogList
+        dogList.sortedByDescending { favoriteDogs.contains(it.first) }
     }
 
     Scaffold(
@@ -173,12 +173,17 @@ fun DogListApp(navController: NavHostController) {
 
                         Spacer(modifier = Modifier.width(8.dp))
 
-                        IconButton(onClick = { isSearching = true }) {
+                        IconButton(onClick = { isSearching = true },
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .offset(y = 4.dp)
+                        ) {
                             Icon(Icons.Default.Search, contentDescription = "Szukaj")
                         }
 
 
                         IconButton(onClick = {
+
                             if (searchText.text.isNotBlank()) {
                                 if (dogList.any { it.first == searchText.text }) {
                                     showError = true
@@ -187,7 +192,11 @@ fun DogListApp(navController: NavHostController) {
                                     searchText = TextFieldValue("")
                                 }
                             }
-                        }) {
+                        },
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .offset(y = 4.dp)
+                        ) {
                             Icon(Icons.Default.Add, contentDescription = "Dodaj")
                         }
                     }
@@ -320,7 +329,7 @@ fun ProfileScreen() {
                 .background(Color.LightGray)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Jan Brzechwa", fontSize = 18.sp, color = Color.Black)
+        Text(text = "Hubert Dżoń", fontSize = 18.sp, color = Color.Black)
     }
 }
 @Composable
