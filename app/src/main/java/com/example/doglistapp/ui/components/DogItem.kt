@@ -13,20 +13,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 
 @Composable
 fun DogItem(
     name: String,
     breed: String,
+    photoUrl: String,
     isFavorite: Boolean,
     onFavoriteToggle: () -> Unit,
     onDelete: () -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Card(
         shape = RoundedCornerShape(8.dp),
@@ -55,7 +60,13 @@ fun DogItem(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text("🐕", fontSize = 20.sp, color = Color.White)
+                AsyncImage(
+                    model = photoUrl,
+                    contentDescription = "Dog photo",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
             }
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -66,12 +77,32 @@ fun DogItem(
             }
 
             IconButton(onClick = onFavoriteToggle) {
+                val brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF6A5ACD),
+                        Color(0xFFFFC0CB)
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(50f, 100f)
+                )
+                val icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder
+
                 Icon(
-                    if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    imageVector = icon,
                     contentDescription = "Toggle Favorite",
-                    tint = if (isFavorite) Color.Red else Color.Gray
+                    modifier = Modifier
+                        .graphicsLayer(alpha = 0.99f)
+                        .drawWithCache {
+                            onDrawWithContent {
+                                drawContent()
+                                if (isFavorite) {
+                                    drawRect(brush, blendMode = BlendMode.SrcAtop)
+                                }
+                            }
+                        }
                 )
             }
+
 
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)

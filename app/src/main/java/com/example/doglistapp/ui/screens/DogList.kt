@@ -1,6 +1,5 @@
 package com.example.doglistapp.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,20 +9,21 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.doglistapp.model.Dog
 import com.example.doglistapp.ui.components.DogItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DogList(
     navController: NavHostController,
-    dogList: MutableList<Pair<String, String>>,
+    dogList: SnapshotStateList<Dog>,
     favoriteDogs: Set<String>,
     onAddDog: (String) -> Unit,
     onToggleFavorite: (String) -> Unit,
@@ -34,11 +34,10 @@ fun DogList(
     var isSearching by remember { mutableStateOf(false) }
 
     val filteredDogs = if (searchText.text.isNotBlank()) {
-        dogList.filter { it.first.contains(searchText.text, ignoreCase = true) }
+        dogList.filter { it.name.contains(searchText.text, ignoreCase = true) }
     } else {
-        dogList.sortedByDescending { favoriteDogs.contains(it.first) }
+        dogList.sortedByDescending { favoriteDogs.contains(it.name) }
     }
-
     Scaffold(
         containerColor = Color.White,
         topBar = {
@@ -85,14 +84,7 @@ fun DogList(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     IconButton(onClick = {
-                        if (searchText.text.isNotBlank()) {
-                            if (dogList.any { it.first == searchText.text }) {
-                                showError = true
-                            } else {
-                                onAddDog(searchText.text)
-                                searchText = TextFieldValue("")
-                            }
-                        }
+                        navController.navigate("dog_add")
                     }) {
                         Icon(Icons.Default.Add, contentDescription = "Add")
                     }
@@ -112,16 +104,19 @@ fun DogList(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                filteredDogs.forEach { (name, breed) ->
-                    DogItem(
-                        name = name,
-                        breed = breed,
-                        isFavorite = favoriteDogs.contains(name),
-                        onFavoriteToggle = { onToggleFavorite(name) },
-                        onDelete = { onDelete(name) },
-                        onClick = { navController.navigate("dog_details/$name") }
-                    )
-                }
+                    filteredDogs.forEach { dog ->
+                        fun String.encodeURL(): String = java.net.URLEncoder.encode(this, "UTF-8")
+                        DogItem(
+                            name = dog.name,
+                            breed = dog.breed,
+                            isFavorite = favoriteDogs.contains(dog.name),
+                            onFavoriteToggle = { onToggleFavorite(dog.name) },
+                            onDelete = { onDelete(dog.name) },
+                            onClick = { navController.navigate("dog_details/${dog.name}/${dog.breed}/${dog.photoUrl.encodeURL()}") },
+                            photoUrl = dog.photoUrl
+                        )
+
+                    }
             }
         }
     )

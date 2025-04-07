@@ -1,6 +1,5 @@
 package com.example.doglistapp.data
 
-import coil3.network.NetworkRequestBody
 import com.example.doglistapp.data.network.DogsService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
@@ -12,7 +11,7 @@ interface AppContainer {
 }
 
 class DefaultAppContainer : AppContainer {
-    private val dogsApiBaseUrl = "https://dog.ceo/api/breeds/"
+    private val dogsApiBaseUrl = "https://dog.ceo/api/"
 
     private val retrofit: Retrofit = Retrofit.Builder()
         .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
