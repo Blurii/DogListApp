@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.doglistapp.model.DogList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +40,7 @@ fun DogProfileScreen(navController: NavController) {
                     Text("Profil")
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigate("dog_list") }) {
+                    IconButton(onClick = { navController.navigate(DogList) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "back")
                     }
                 },

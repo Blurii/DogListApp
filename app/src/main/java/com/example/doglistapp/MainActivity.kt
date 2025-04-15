@@ -4,17 +4,24 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.example.doglistapp.model.Dog
-import com.example.doglistapp.ui.DogList
+import com.example.doglistapp.model.DogCreate
+import com.example.doglistapp.model.DogDetails
+import com.example.doglistapp.model.DogList
+import com.example.doglistapp.model.DogProfile
+import com.example.doglistapp.model.DogSettings
 import com.example.doglistapp.ui.DogDetailsScreen
 import com.example.doglistapp.ui.screens.DogCreate.DogCreateScreen
 import com.example.doglistapp.ui.screens.DogCreate.DogCreateViewModel
 import com.example.doglistapp.ui.screens.DogDetails.DogDetailsViewModel
+import com.example.doglistapp.ui.screens.DogList.DogListScreen
 import com.example.doglistapp.ui.screens.DogProfile.DogProfileScreen
 import com.example.doglistapp.ui.screens.DogSettings.DogSettingsScreen
 
@@ -24,19 +31,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
-
             val dogList = remember { mutableStateListOf<Dog>() }
             val favoriteDogs = remember { mutableStateListOf<String>() }
 
-            NavHost(navController = navController, startDestination = "dog_list") {
-                composable("dog_list") {
-                    DogList(
+            NavHost(navController = navController, startDestination = DogList) {
+                composable<DogList> {
+                    DogListScreen(
                         navController = navController,
                         dogList = dogList,
                         favoriteDogs = favoriteDogs.toSet(),
-                        onAddDog = { name ->
-                            dogList.add(Dog(name, "Nieznana rasa", ""))
-                        },
                         onToggleFavorite = { name ->
                             if (favoriteDogs.contains(name)) {
                                 favoriteDogs.remove(name)
@@ -50,35 +53,29 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
-                composable("dog_details/{dogName}/{dogBreed}/{photoUrl}") { backStackEntry ->
-                    val dogName = backStackEntry.arguments?.getString("dogName") ?: "Unknown"
-                    val dogBreed = backStackEntry.arguments?.getString("dogBreed") ?: "Unknown"
-                    val photoUrlEncoded = backStackEntry.arguments?.getString("photoUrl") ?: ""
-                    val photoUrl = java.net.URLDecoder.decode(photoUrlEncoded, "UTF-8")
+                composable<DogDetails> { backStackEntry ->
+                    val args = backStackEntry.toRoute<DogDetails>()
+                    val decodedUrl = java.net.URLDecoder.decode(args.photoUrl, "UTF-8")
 
                     val viewModel: DogDetailsViewModel = viewModel(factory = DogDetailsViewModel.Factory)
                     DogDetailsScreen(
-                        dogName = dogName,
-                        dogBreed = dogBreed,
-                        photoUrl = photoUrl,
+                        dogName = args.dogName,
+                        dogBreed = args.dogBreed,
+                        photoUrl = decodedUrl,
                         navController = navController,
-                        onDelete = { name ->
-                            dogList.removeAll { it.name == name }
-                            favoriteDogs.remove(name)
-                        },
                         uiState = viewModel.uiState,
                         retryAction = viewModel::getDogImage
                     )
                 }
-                composable("settings") {
+                composable<DogSettings> {
                     DogSettingsScreen(
                         navController = navController
                     )
                 }
-                composable("profile") {
+                composable<DogProfile> {
                     DogProfileScreen(navController)
                 }
-                composable("dog_add") {
+                composable<DogCreate> {
                     val viewModel: DogCreateViewModel =
                         viewModel(factory = DogCreateViewModel.Factory)
                     DogCreateScreen(
@@ -88,7 +85,8 @@ class MainActivity : ComponentActivity() {
                             navController.popBackStack()
                         },
                         viewModel = viewModel,
-                        retryAction = viewModel::getDogImage
+                        retryAction = viewModel::getDogImage,
+                        existingDogs = dogList
                     )
                 }
             }

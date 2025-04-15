@@ -39,6 +39,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.example.doglistapp.model.DogList
 import com.example.doglistapp.ui.screens.DogDetails.DogDetailsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,7 +48,6 @@ fun DogDetailsScreen(
     dogName: String,
     dogBreed: String,
     navController: NavController,
-    onDelete: (String) -> Unit,
     uiState: DogDetailsViewModel.UiState,
     retryAction: () -> Unit,
     photoUrl: String,
@@ -61,7 +61,7 @@ fun DogDetailsScreen(
                     Text("Detale")
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigate("dog_list") }) {
+                    IconButton(onClick = { navController.navigate(DogList) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "back")
                     }
                 },
@@ -142,7 +142,7 @@ fun ContentScreen(uiState: DogDetailsViewModel.UiState, retryAction: () -> Unit,
 @Composable
 fun LoadingScreen(modifier: Modifier = Modifier) {
     CircularProgressIndicator(
-        modifier = Modifier.width(64.dp),
+        modifier = modifier.width(64.dp),
         color = MaterialTheme.colorScheme.secondary,
         trackColor = MaterialTheme.colorScheme.surfaceVariant,
     )

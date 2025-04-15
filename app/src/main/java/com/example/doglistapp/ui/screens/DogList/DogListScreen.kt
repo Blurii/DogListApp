@@ -1,58 +1,70 @@
-package com.example.doglistapp.ui
+package com.example.doglistapp.ui.screens.DogList
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.doglistapp.model.Dog
+import com.example.doglistapp.model.DogCreate
+import com.example.doglistapp.model.DogDetails
+import com.example.doglistapp.model.DogProfile
+import com.example.doglistapp.model.DogSettings
 import com.example.doglistapp.ui.components.DogItem
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DogList(
+fun DogListScreen(
     navController: NavHostController,
     dogList: SnapshotStateList<Dog>,
     favoriteDogs: Set<String>,
-    onAddDog: (String) -> Unit,
     onToggleFavorite: (String) -> Unit,
     onDelete: (String) -> Unit,
+    viewModel: DogListViewModel = remember { DogListViewModel() }
 ) {
-    var searchText by remember { mutableStateOf(TextFieldValue("")) }
-    var showError by remember { mutableStateOf(false) }
-    var isSearching by remember { mutableStateOf(false) }
+    val searchText = viewModel.searchText
+    val filteredDogs = viewModel.getFilteredDogs(dogList, favoriteDogs)
 
-    val filteredDogs = if (searchText.text.isNotBlank()) {
-        dogList.filter { it.name.contains(searchText.text, ignoreCase = true) }
-    } else {
-        dogList.sortedByDescending { favoriteDogs.contains(it.name) }
-    }
     Scaffold(
         containerColor = Color.White,
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text("Doggos")
-                },
+                title = { Text("Doggos") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigate("settings") }) {
+                    IconButton(onClick = { navController.navigate(DogSettings) }) {
                         Icon(Icons.Filled.Settings, contentDescription = "Settings")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { navController.navigate("profile") }) {
+                    IconButton(onClick = { navController.navigate(DogProfile) }) {
                         Icon(Icons.Filled.Person, contentDescription = "Profile")
                     }
                 },
@@ -73,29 +85,21 @@ fun DogList(
                 Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = searchText,
-                        onValueChange = {
-                            searchText = it
-                            showError = false
-                        },
+                        onValueChange = { viewModel.onSearchTextChange(it) },
                         label = { Text("Wyszukaj pieska 🐕") },
                         modifier = Modifier.weight(1f),
-                        isError = showError
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    IconButton(onClick = {
-                        navController.navigate("dog_add")
-                    },
+                    IconButton(
+                        onClick = { navController.navigate(DogCreate) },
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
-                            .offset(y = 4.dp)) {
+                            .offset(y = 4.dp)
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = "Add")
                     }
-                }
-
-                if (showError) {
-                    Text(text = "Piesek już istnieje!", color = Color.Red, fontSize = 14.sp)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -108,19 +112,25 @@ fun DogList(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                    filteredDogs.forEach { dog ->
-                        fun String.encodeURL(): String = java.net.URLEncoder.encode(this, "UTF-8")
-                        DogItem(
-                            name = dog.name,
-                            breed = dog.breed,
-                            isFavorite = favoriteDogs.contains(dog.name),
-                            onFavoriteToggle = { onToggleFavorite(dog.name) },
-                            onDelete = { onDelete(dog.name) },
-                            onClick = { navController.navigate("dog_details/${dog.name}/${dog.breed}/${dog.photoUrl.encodeURL()}") },
-                            photoUrl = dog.photoUrl
-                        )
-
-                    }
+                filteredDogs.forEach { dog ->
+                    DogItem(
+                        name = dog.name,
+                        breed = dog.breed,
+                        isFavorite = favoriteDogs.contains(dog.name),
+                        onFavoriteToggle = { onToggleFavorite(dog.name) },
+                        onDelete = { onDelete(dog.name) },
+                        onClick = {
+                            navController.navigate(
+                                DogDetails(
+                                    dogName = dog.name,
+                                    dogBreed = dog.breed,
+                                    photoUrl = dog.photoUrl
+                                )
+                            )
+                        },
+                        photoUrl = dog.photoUrl
+                    )
+                }
             }
         }
     )
