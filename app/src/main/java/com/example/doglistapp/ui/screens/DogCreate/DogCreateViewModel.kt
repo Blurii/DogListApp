@@ -10,12 +10,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.doglistapp.DoggoApplication
-import com.example.doglistapp.data.DogsPhotosRepository
+import com.example.doglistapp.data.DogsRepository
 import com.example.doglistapp.model.DogPhoto
 import kotlinx.coroutines.launch
 
 class DogCreateViewModel(
-    private val dogsPhotosRepository: DogsPhotosRepository
+    private val dogsPhotosRepository: DogsRepository
 ) : ViewModel() {
 
     sealed interface UiState {

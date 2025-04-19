@@ -148,9 +148,9 @@ fun DogCreateScreen(
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
-                    }
+                }
 
-                    Box(
+                Box(
                     modifier = Modifier
                         .width(320.dp)
                         .height(48.dp)

@@ -1,5 +1,9 @@
 package com.example.doglistapp.data
 
+import android.content.Context
+import androidx.room.Room
+import com.example.doglistapp.data.local.database.AppDatabase
+import com.example.doglistapp.data.local.database.DogEntityDao
 import com.example.doglistapp.data.network.DogsService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
@@ -7,10 +11,11 @@ import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
 
 interface AppContainer {
-    val dogsPhotosRepository: DogsPhotosRepository
+    val dogsRepository: DogsRepository
+    val dogDao: DogEntityDao
 }
 
-class DefaultAppContainer : AppContainer {
+class DefaultAppContainer(context: Context) : AppContainer {
     private val dogsApiBaseUrl = "https://dog.ceo/api/"
 
     private val retrofit: Retrofit = Retrofit.Builder()
@@ -22,8 +27,16 @@ class DefaultAppContainer : AppContainer {
         retrofit.create(DogsService::class.java)
     }
 
-    override val dogsPhotosRepository: DogsPhotosRepository by lazy {
-        NetworkDogsPhotosRepository(dogsService)
+    private val database: AppDatabase by lazy {
+        Room.databaseBuilder(context, AppDatabase::class.java, "app_database").build()
+    }
+
+    override val dogDao: DogEntityDao by lazy {
+        database.dogDao()
+    }
+
+    override val dogsRepository: DogsRepository by lazy {
+        DefaultDogsRepository(dogsService, dogDao)
     }
 
 }
