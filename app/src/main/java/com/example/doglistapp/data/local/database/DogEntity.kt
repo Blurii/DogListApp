@@ -8,11 +8,14 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "dogs")
 data class DogEntity(
     val name: String,
+
     val breed: String,
-    val photoUrl: String,
+
+    val imageUrl: String,
 
     @ColumnInfo(defaultValue = "0")
-    val isFav: Boolean
+    val isFav: Boolean,
+
 ) {
     @PrimaryKey(autoGenerate = true)
     var uid: Int = 0

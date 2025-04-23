@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,8 +25,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,22 +40,28 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.example.doglistapp.model.Dog
-import com.example.doglistapp.ui.ErrorScreen
-import com.example.doglistapp.ui.LoadingScreen
+import com.example.doglistapp.model.DogList
+import com.example.doglistapp.ui.screens.DogDetails.ErrorScreen
+import com.example.doglistapp.ui.screens.DogDetails.LoadingScreen
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DogCreateScreen(
     navController: NavController,
-    onDogAdded: (String, String, String) -> Unit,
     viewModel: DogCreateViewModel,
-    retryAction: () -> Unit,
-    existingDogs: List<Dog>
+    retryAction: () -> Unit
 ) {
-    val name = remember { mutableStateOf("") }
-    val breed = remember { mutableStateOf("") }
-    val showError = remember { mutableStateOf(false) }
+
+    val name by viewModel.name
+    val breed by viewModel.breed
+    val dogAdded = viewModel.dogAdded.value
+
+    LaunchedEffect(dogAdded) {
+        if (dogAdded) {
+            navController.navigate(DogList)
+        }
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -64,7 +69,7 @@ fun DogCreateScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Dodaj Psa") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.navigate(DogList) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -114,34 +119,32 @@ fun DogCreateScreen(
                         }
                     }
                 }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedTextField(
-                    value = name.value,
-                    onValueChange = { name.value = it },
+                    value = name,
+                    onValueChange = { viewModel.name.value = it },
                     label = { Text("Imię") },
                     singleLine = true,
                     modifier = Modifier
                         .width(320.dp)
-                        .height(56.dp)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
-                    value = breed.value,
-                    onValueChange = { breed.value = it },
+                    value = breed,
+                    onValueChange = { viewModel.breed.value = it },
                     label = { Text("Rasa") },
                     singleLine = true,
                     modifier = Modifier
                         .width(320.dp)
-                        .height(56.dp)
                 )
-
 
                 Spacer(modifier = Modifier.height(72.dp))
 
-                if (showError.value) {
+                if (viewModel.showError.value) {
                     Text(
                         text = "Piesek już istnieje!",
                         color = Color.Red,
@@ -165,22 +168,12 @@ fun DogCreateScreen(
                 ) {
                     Button(
                         onClick = {
-                            val dogName = if (name.value.isNotBlank()) name.value else "brak imienia"
-                            val dogBreed = if (breed.value.isNotBlank()) breed.value else "rasa nieznana"
-                            val isDuplicate = existingDogs.any { it.name.equals(dogName, ignoreCase = true) && it.breed.equals(dogBreed, ignoreCase = true) }
-
-                            if (isDuplicate) {
-                                showError.value = true
-                            } else {
-                                showError.value = false
-                                val imageUrl = (viewModel.uiState as? DogCreateViewModel.UiState.Success)?.photo?.message ?: ""
-                                onDogAdded(dogName, dogBreed, imageUrl)
+                            if (name.isNotEmpty() && breed.isNotEmpty()) {
+                                viewModel.addDog(name, breed)
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                        contentPadding = PaddingValues(),
-                        modifier = Modifier
-                            .fillMaxSize()
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         Text("Add", fontSize = 16.sp)
                     }

@@ -12,7 +12,7 @@ interface DogsRepository {
     val dogs: Flow<List<Dog>>
 
     suspend fun getRandomDogImage(): DogPhoto
-    suspend fun add(name: String)
+    suspend fun add(name: String, breed: String, imageUrl: String)
     suspend fun remove(id: Int)
     suspend fun triggerFav(id: Int)
 }
@@ -28,29 +28,16 @@ class DefaultDogsRepository(
                 id = it.uid,
                 name = it.name,
                 breed = it.breed,
-                photoUrl = it.photoUrl,
-                isFavorite = it.isFav
+                isFavorite = it.isFav,
+                imageUrl = it.imageUrl
             )
         }
     }
 
     override suspend fun getRandomDogImage(): DogPhoto = dogsService.getRandomDogImage()
 
-    override suspend fun add(name: String) {
-        val photo = dogsService.getRandomDogImage()
-        val breed = extractBreedFromUrl(photo.message)
-        dogDao.insertDog(
-            DogEntity(
-                name = name,
-                breed = breed,
-                photoUrl = photo.message,
-                isFav = false
-            )
-        )
-    }
-    private fun extractBreedFromUrl(url: String): String {
-        val regex = Regex("breeds/([^/]+)/")
-        return regex.find(url)?.groupValues?.get(1)?.replace("-", " ")?.capitalize() ?: "Unknown"
+    override suspend fun add(name: String, breed: String, imageUrl: String) {
+        dogDao.insertDog(DogEntity(name = name, breed = breed, isFav = false, imageUrl = imageUrl))
     }
 
     override suspend fun remove(id: Int) {

@@ -12,11 +12,7 @@ object DogSettings
 object DogProfile
 
 @Serializable
-data class DogDetails(
-    val dogName: String,
-    val dogBreed: String,
-    val photoUrl: String
-)
+data class DogDetails(val name: String, val breed: String, val imageUrl: String)
 
 @Serializable
 object DogCreate

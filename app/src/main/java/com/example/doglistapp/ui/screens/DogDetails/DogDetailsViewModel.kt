@@ -10,12 +10,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.doglistapp.DoggoApplication
-import com.example.doglistapp.data.DogsPhotosRepository
+import com.example.doglistapp.data.DogsRepository
 import com.example.doglistapp.model.DogPhoto
 import kotlinx.coroutines.launch
 
 class DogDetailsViewModel(
-    private val dogsPhotosRepository: DogsPhotosRepository
+    private val dogsRepository: DogsRepository
 ) : ViewModel() {
 
     sealed interface UiState {
@@ -34,7 +34,7 @@ class DogDetailsViewModel(
         viewModelScope.launch {
             uiState = UiState.Loading
             uiState = try {
-                val image = dogsPhotosRepository.getRandomDogImage()
+                val image = dogsRepository.getRandomDogImage()
                 UiState.Success(image)
             } catch (e: Exception) {
                 UiState.Error
@@ -46,9 +46,10 @@ class DogDetailsViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application = (this[APPLICATION_KEY] as DoggoApplication)
-                val dogsPhotosRepository = application.container.dogsPhotosRepository
+                val dogsPhotosRepository = application.container.dogsRepository
                 DogDetailsViewModel(dogsPhotosRepository)
             }
         }
     }
 }
+
